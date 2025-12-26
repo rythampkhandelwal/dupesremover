@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>6-Digit Prefix De-Duper</title>
+  <style>
+    :root{
+      --bg:#0b1020; --txt:rgba(255,255,255,.92); --muted:rgba(255,255,255,.65);
+      --line:rgba(255,255,255,.12); --shadow:0 10px 30px rgba(0,0,0,.35);
+      --radius:18px; --accent:#7c3aed; --accent2:#22c55e;
+      --warn:#f59e0b; --danger:#ef4444;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; padding:22px;
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      color:var(--txt);
+      background:
+        radial-gradient(1200px 700px at 10% 0%, rgba(124,58,237,.35), transparent 55%),
+        radial-gradient(900px 600px at 90% 10%, rgba(34,197,94,.22), transparent 55%),
+        radial-gradient(800px 500px at 50% 90%, rgba(59,130,246,.18), transparent 55%),
+        var(--bg);
+    }
+    .wrap{max-width:1100px;margin:0 auto}
+    header{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}
+    .title{display:flex;flex-direction:column;gap:6px}
+    .title h1{margin:0;font-size:clamp(20px,2.2vw,28px);letter-spacing:.2px}
+    .title p{margin:0;color:var(--muted);max-width:72ch;line-height:1.4;font-size:14px}
+    .pillRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+    .pill{
+      display:inline-flex;gap:8px;align-items:center;
+      padding:8px 10px;border:1px solid var(--line);
+      background:rgba(255,255,255,.04);border-radius:999px;color:var(--muted);
+      font-size:12px;backdrop-filter:blur(10px)
+    }
+    .dot{width:9px;height:9px;border-radius:999px;background:var(--accent2);box-shadow:0 0 0 3px rgba(34,197,94,.18)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media(max-width:920px){.grid{grid-template-columns:1fr}}
+    .card{
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+      border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden
+    }
+    .cardHead{
+      display:flex;gap:10px;align-items:center;justify-content:space-between;
+      padding:14px 14px 10px;border-bottom:1px solid rgba(255,255,255,.08)
+    }
+    .cardHead .left{display:flex;flex-direction:column;gap:3px;min-width:200px}
+    .cardHead .left .h{font-weight:650;letter-spacing:.2px}
+    .cardHead .left .s{color:var(--muted);font-size:12px;line-height:1.35}
+    .btnRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    button{
+      appearance:none;cursor:pointer;user-select:none;
+      border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--txt);
+      border-radius:12px;padding:9px 11px;font-weight:600;font-size:13px;
+      transition:transform .08s ease, background .12s ease, border-color .12s ease, opacity .12s ease;
+    }
+    button:hover{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.22)}
+    button:active{transform:translateY(1px)}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .primary{border-color:rgba(124,58,237,.55);background:linear-gradient(180deg, rgba(124,58,237,.35), rgba(124,58,237,.18))}
+    .primary:hover{background:linear-gradient(180deg, rgba(124,58,237,.45), rgba(124,58,237,.22))}
+    .good{border-color:rgba(34,197,94,.55);background:linear-gradient(180deg, rgba(34,197,94,.28), rgba(34,197,94,.14))}
+    .danger{border-color:rgba(239,68,68,.6);background:linear-gradient(180deg, rgba(239,68,68,.22), rgba(239,68,68,.10))}
+    textarea{
+      width:100%;min-height:340px;resize:vertical;border:0;outline:none;padding:14px;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      font-size:13px;line-height:1.35;color:var(--txt);background:rgba(0,0,0,.18)
+    }
+    textarea::placeholder{color:rgba(255,255,255,.35)}
+    .foot{
+      display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
+      padding:10px 14px 14px;border-top:1px solid rgba(255,255,255,.08)
+    }
+    .stats{display:flex;flex-wrap:wrap;gap:10px;align-items:center;color:var(--muted);font-size:12px}
+    .stat{
+      display:inline-flex;gap:8px;align-items:center;padding:7px 10px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04)
+    }
+    .k{color:rgba(255,255,255,.85);font-weight:700}
+    .msg{
+      font-size:12px;color:rgba(255,255,255,.8);padding:8px 10px;border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);
+      display:none;max-width:100%;word-break:break-word
+    }
+    .msg.show{display:block}
+    .msg.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10)}
+    .msg.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.10)}
+    .msg.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10)}
+    .tiny{color:var(--muted);font-size:12px;margin-top:10px;line-height:1.4}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <h1>6-Digit Prefix De-Duper</h1>
+        <p>
+          Compares only the <b>first 6 digits</b> of each line. Keeps the first occurrence, removes later duplicates.
+          Output also <b>pads the starting BIN/number to 16 characters</b> using <code>x</code> (e.g. <code>559888039</code> → <code>559888039xxxxxxx</code>).
+          Empty lines & extra spaces are removed.
+        </p>
+      </div>
+      <div class="pillRow">
+        <div class="pill"><span class="dot"></span> Fast • Offline • No uploads</div>
+        <div class="pill">Rule: keep the <b>first</b> line per 6-digit prefix</div>
+        <div class="pill">Pad: first token → <b>16 chars</b> with <b>x</b></div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <div class="cardHead">
+          <div class="left">
+            <div class="h">Input</div>
+            <div class="s">Paste your raw list here.</div>
+          </div>
+          <div class="btnRow">
+            <button id="btnPaste" class="good" type="button">Paste</button>
+            <button id="btnClearIn" class="danger" type="button">Clear</button>
+          </div>
+        </div>
+        <textarea id="in" placeholder="Paste lines here..."></textarea>
+        <div class="foot">
+          <div class="stats">
+            <div class="stat">Lines (non-empty): <span class="k" id="inCount">0</span></div>
+          </div>
+          <div class="msg" id="msgIn"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="cardHead">
+          <div class="left">
+            <div class="h">Output</div>
+            <div class="s">Unique by first 6 digits + padded to 16 with x.</div>
+          </div>
+          <div class="btnRow">
+            <button id="btnProcess" class="primary" type="button">Process</button>
+            <button id="btnCopyOut" class="good" type="button" disabled>Copy</button>
+            <button id="btnClearOut" type="button">Clear</button>
+          </div>
+        </div>
+        <textarea id="out" placeholder="Your de-duplicated list will appear here..." readonly></textarea>
+        <div class="foot">
+          <div class="stats">
+            <div class="stat">Unique kept: <span class="k" id="outCount">0</span></div>
+            <div class="stat">Duplicates removed: <span class="k" id="dupeCount">0</span></div>
+            <div class="stat">Invalid (no 6 leading digits): <span class="k" id="invalidCount">0</span></div>
+          </div>
+          <div class="msg" id="msgOut"></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="tiny">
+      Behavior:
+      <ul>
+        <li>Each line is trimmed. Blank lines are ignored.</li>
+        <li>De-dupe key = first <b>6 digits</b> at the very start of the line.</li>
+        <li>Padding = the starting token made of <code>[0-9x]</code> is padded to <b>16</b> characters with <code>x</code> (only if shorter).</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const $in = document.getElementById('in');
+      const $out = document.getElementById('out');
+
+      const $inCount = document.getElementById('inCount');
+      const $outCount = document.getElementById('outCount');
+      const $dupeCount = document.getElementById('dupeCount');
+      const $invalidCount = document.getElementById('invalidCount');
+
+      const $btnPaste = document.getElementById('btnPaste');
+      const $btnClearIn = document.getElementById('btnClearIn');
+      const $btnProcess = document.getElementById('btnProcess');
+      const $btnCopyOut = document.getElementById('btnCopyOut');
+      const $btnClearOut = document.getElementById('btnClearOut');
+
+      const $msgIn = document.getElementById('msgIn');
+      const $msgOut = document.getElementById('msgOut');
+
+      function showMsg(el, text, kind){
+        el.className = 'msg show' + (kind ? (' ' + kind) : '');
+        el.textContent = text;
+        clearTimeout(el._t);
+        el._t = setTimeout(() => { el.className = 'msg'; el.textContent = ''; }, 2400);
+      }
+
+      function normalizeLines(text){
+        const raw = text.split(/\r\n|\n|\r/);
+        const cleaned = [];
+        for (const line of raw){
+          const t = line.trim();
+          if (t.length) cleaned.push(t);
+        }
+        return cleaned;
+      }
+
+      function extractFirst6DigitsKey(line){
+        const m = line.match(/^(\d{6})/);
+        return m ? m[1] : null;
+      }
+
+      // Pads the starting "number token" (digits + x) to length 16 with 'x'
+      // Examples:
+      //  "559888039" -> "559888039xxxxxxx"
+      //  "476275xxxx|02|2026" -> "476275xxxxxxxxxx|02|2026"
+      //  "4388570803011564|..." -> unchanged (already 16)
+      function padLeadingTokenTo16(line){
+        const m = line.match(/^([0-9xX]+)/);
+        if (!m) return line;
+
+        const token = m[1].replace(/X/g, 'x'); // normalize to lowercase x
+        const rest = line.slice(m[1].length);
+
+        if (token.length >= 16) return token + rest;
+
+        const padded = token + 'x'.repeat(16 - token.length);
+        return padded + rest;
+      }
+
+      function updateInputCount(){
+        $inCount.textContent = String(normalizeLines($in.value).length);
+      }
+
+      async function pasteFromClipboard(){
+        try{
+          const txt = await navigator.clipboard.readText();
+          if (!txt){
+            showMsg($msgIn, "Clipboard is empty.", "warn");
+            return;
+          }
+          const sep = $in.value && !$in.value.endsWith("\n") ? "\n" : "";
+          $in.value = $in.value + sep + txt;
+          updateInputCount();
+          showMsg($msgIn, "Pasted from clipboard.", "ok");
+          $in.focus();
+        }catch(e){
+          showMsg($msgIn, "Paste blocked by browser permissions. Use Ctrl+V.", "warn");
+        }
+      }
+
+      function process(){
+        const lines = normalizeLines($in.value);
+
+        const seen = new Set();
+        const kept = [];
+        let dupes = 0;
+        let invalid = 0;
+
+        for (const rawLine of lines){
+          const line = rawLine.trim();
+          const key = extractFirst6DigitsKey(line);
+
+          if (!key){
+            invalid++;
+            kept.push(padLeadingTokenTo16(line));
+            continue;
+          }
+
+          if (seen.has(key)){
+            dupes++;
+            continue;
+          }
+
+          seen.add(key);
+          kept.push(padLeadingTokenTo16(line));
+        }
+
+        $out.value = kept.join("\n");
+        $outCount.textContent = String(kept.length);
+        $dupeCount.textContent = String(dupes);
+        $invalidCount.textContent = String(invalid);
+        $btnCopyOut.disabled = kept.length === 0;
+
+        if (lines.length === 0){
+          showMsg($msgOut, "Nothing to process — paste lines into Input first.", "warn");
+        } else if (dupes === 0){
+          showMsg($msgOut, "Done. No duplicates found (by first 6 digits).", "ok");
+        } else {
+          showMsg($msgOut, `Done. Removed ${dupes} duplicate line(s).`, "ok");
+        }
+      }
+
+      async function copyOutput(){
+        const txt = ($out.value || "").trim();
+        if (!txt){
+          showMsg($msgOut, "Output is empty.", "warn");
+          return;
+        }
+        try{
+          await navigator.clipboard.writeText(txt);
+          showMsg($msgOut, "Copied output to clipboard.", "ok");
+        }catch(e){
+          $out.focus();
+          $out.select();
+          document.execCommand('copy');
+          showMsg($msgOut, "Copied (fallback).", "ok");
+        }
+      }
+
+      function clearInput(){
+        $in.value = "";
+        updateInputCount();
+        showMsg($msgIn, "Input cleared.", "ok");
+        $in.focus();
+      }
+
+      function clearOutput(){
+        $out.value = "";
+        $outCount.textContent = "0";
+        $dupeCount.textContent = "0";
+        $invalidCount.textContent = "0";
+        $btnCopyOut.disabled = true;
+        showMsg($msgOut, "Output cleared.", "ok");
+      }
+
+      $btnPaste.addEventListener('click', pasteFromClipboard);
+      $btnClearIn.addEventListener('click', clearInput);
+      $btnProcess.addEventListener('click', process);
+      $btnCopyOut.addEventListener('click', copyOutput);
+      $btnClearOut.addEventListener('click', clearOutput);
+      $in.addEventListener('input', updateInputCount);
+
+      document.addEventListener('keydown', (e) => {
+        const isMac = navigator.platform.toUpperCase().includes('MAC');
+        const mod = isMac ? e.metaKey : e.ctrlKey;
+        if (mod && e.key === 'Enter'){ e.preventDefault(); process(); }
+        if (mod && e.shiftKey && e.key.toLowerCase() === 'c'){
+          if (!$btnCopyOut.disabled) copyOutput();
+        }
+      });
+
+      updateInputCount();
+    })();
+  </script>
+</body>
+</html>
