@@ -18,7 +18,7 @@
     .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
     button{
       border:1px solid var(--border);background:rgba(255,255,255,.06);color:var(--text);
-      padding:10px 12px;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer;
+      padding:10px 12px;border-radius:12px;font-weight:900;font-size:13px;cursor:pointer;
       transition:background .12s ease,border-color .12s ease,transform .08s ease,opacity .12s ease;user-select:none
     }
     button:hover{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.16)}
@@ -100,53 +100,60 @@
         $toast.textContent = msg;
         $toast.classList.add('show');
         clearTimeout($toast._t);
-        $toast._t = setTimeout(() => $toast.classList.remove('show'), 1200);
+        $toast._t = setTimeout(() => $toast.classList.remove('show'), 1100);
       };
 
       const nonBlankLines = (text) => {
         const lines = text.split(/\r\n|\n|\r/);
         const out = [];
         for (let line of lines){
-          if (line.trim().length === 0) continue; // remove empty/space-only lines
+          if (line.trim().length === 0) continue;
           out.push(line.trim());
         }
         return out;
       };
 
-      // STRICT: output only these forms:
-      // 1) <digits/x at least 6 chars...> optionally followed by |...|...
-      // 2) or if the line is a quoted entry like: "625814260257xxxx|05|2028",
-      //    extract inside quotes and treat as (1).
-      // 3) or emoji/details line: extract first 6 digits -> output BINxxxxxxxxxx
+      // STRICT normalized output:
+      // - Always output: <16-char padded token made from digits/x> + optional pipe tail
+      // - Accepted inputs:
+      //   A) raw token at line start: 6+ of [0-9x] optionally followed by |...|...
+      //   B) quoted token anywhere in the line: "...."
+      //   C) emoji/details: pick first standalone 6 digits -> BINxxxxxxxxxx
       //
-      // Anything else is dropped.
-      const extractStrict = (line) => {
-        // quoted: ".....",
-        let m = line.match(/"([^"]+)"/);
-        if (m) line = m[1].trim();
+      // IMPORTANT FIX: quoted lines like:
+      //    "625814260257xxxx|05|2028",
+      // will be handled, and the trailing comma will be ignored.
+      const normalizeStrict = (line) => {
+        // 1) If a quoted string exists, use its contents (works even with trailing comma)
+        const q = line.match(/"([^"]+)"/);
+        if (q) line = q[1].trim();
 
-        // starts with bin-ish token (digits/x) + optional pipe tail
-        m = line.match(/^([0-9xX]{6,})(\|[0-9xX|]+)?$/);
+        // 2) Remove a trailing comma (common in arrays)
+        line = line.replace(/,+\s*$/g, "");
+
+        // 3) Accept start token + optional pipe tail (tail can contain digits/x and pipes only)
+        //    Example: 625814260209|04|29
+        //             62596938xxx|30|xx|xxx
+        //             551827706xxxxxxx
+        const m = line.match(/^([0-9xX]{6,})(\|[0-9xX|]{1,})?$/);
         if (m){
           const tokenRaw = m[1].replace(/X/g,'x');
           const tail = m[2] || "";
 
-          // pad token to 16 with x (do not cut if longer than 16; keep as-is)
           const token = tokenRaw.length >= 16 ? tokenRaw : (tokenRaw + "x".repeat(16 - tokenRaw.length));
           return token + tail;
         }
 
-        // emoji/details line -> take first standalone 6 digits
-        m = line.match(/\b(\d{6})\b/);
-        if (m){
-          return m[1] + "x".repeat(10);
-        }
+        // 4) Emoji/details line: extract first 6-digit bin (standalone) and output BINxxxxxxxxxx
+        const b = line.match(/\b(\d{6})\b/);
+        if (b) return b[1] + "x".repeat(10);
 
+        // 5) Anything else: drop (strict)
         return null;
       };
 
-      const key6 = (outLine) => {
-        const m = outLine.match(/^(\d{6})/);
+      const key6 = (normalizedLine) => {
+        const m = normalizedLine.match(/^(\d{6})/);
         return m ? m[1] : null;
       };
 
@@ -161,7 +168,7 @@
         let removed = 0;
 
         for (const line of lines){
-          const normalized = extractStrict(line);
+          const normalized = normalizeStrict(line);
           if (!normalized) continue;
 
           const k = key6(normalized);
