@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>DeDupe (6-digit)</title>
+  <title>DeDupe</title>
   <style>
     :root{
       --bg:#0b1220;
@@ -29,10 +29,7 @@
       display:flex;align-items:center;justify-content:space-between;
       gap:12px;flex-wrap:wrap;margin-bottom:12px;
     }
-    .title{
-      font-weight:750;letter-spacing:.2px;
-      font-size:15px;line-height:1.1;
-    }
+    .title{font-weight:800;letter-spacing:.2px;font-size:15px}
     .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
     button{
       border:1px solid var(--border);
@@ -40,7 +37,7 @@
       color:var(--text);
       padding:10px 12px;
       border-radius:12px;
-      font-weight:700;
+      font-weight:750;
       font-size:13px;
       cursor:pointer;
       transition:background .12s ease, border-color .12s ease, transform .08s ease, opacity .12s ease;
@@ -49,21 +46,11 @@
     button:hover{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.16)}
     button:active{transform:translateY(1px)}
     button:disabled{opacity:.55;cursor:not-allowed}
-    .primary{
-      background:rgba(37,99,235,.25);
-      border-color:rgba(37,99,235,.55);
-    }
+    .primary{background:rgba(37,99,235,.25);border-color:rgba(37,99,235,.55)}
     .primary:hover{background:rgba(37,99,235,.34)}
-    .danger{
-      background:rgba(239,68,68,.18);
-      border-color:rgba(239,68,68,.55);
-    }
+    .danger{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.55)}
     .danger:hover{background:rgba(239,68,68,.24)}
-    .grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-    }
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media(max-width:920px){.grid{grid-template-columns:1fr}}
     .panel{
       background:var(--panel);
@@ -80,43 +67,25 @@
       border-bottom:1px solid rgba(255,255,255,.08);
       display:flex;align-items:center;justify-content:space-between;gap:10px;
     }
-    .head .label{font-weight:750;font-size:13px;letter-spacing:.2px}
-    .head .meta{
-      color:var(--muted);
-      font-size:12px;
-      font-variant-numeric:tabular-nums;
-      white-space:nowrap;
-    }
+    .head .label{font-weight:800;font-size:13px;letter-spacing:.2px}
+    .head .meta{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
     textarea{
-      flex:1;
-      width:100%;
-      border:0;
-      outline:none;
-      resize:none;
-      padding:12px;
-      background:transparent;
-      color:var(--text);
+      flex:1;width:100%;
+      border:0;outline:none;resize:none;
+      padding:12px;background:transparent;color:var(--text);
       font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-      font-size:13px;
-      line-height:1.38;
+      font-size:13px;line-height:1.38;
       font-variant-numeric:tabular-nums;
-      white-space:pre;
-      overflow:auto;
+      white-space:pre;overflow:auto;
     }
     textarea::placeholder{color:rgba(255,255,255,.33)}
     .toast{
-      position:fixed;
-      left:50%;
-      bottom:16px;
-      transform:translateX(-50%);
+      position:fixed;left:50%;bottom:16px;transform:translateX(-50%);
       background:rgba(0,0,0,.55);
       border:1px solid rgba(255,255,255,.14);
       color:rgba(255,255,255,.92);
-      padding:10px 12px;
-      border-radius:12px;
-      font-size:12px;
-      display:none;
-      max-width:min(92vw, 520px);
+      padding:10px 12px;border-radius:12px;font-size:12px;
+      display:none;max-width:min(92vw, 520px);
       backdrop-filter: blur(10px);
       box-shadow:0 10px 28px rgba(0,0,0,.35);
     }
@@ -126,7 +95,7 @@
 <body>
   <div class="wrap">
     <div class="top">
-      <div class="title">DeDupe (6-digit)</div>
+      <div class="title">DeDupe</div>
       <div class="actions">
         <button id="btnProcess" class="primary" type="button">Process</button>
         <button id="btnCopy" type="button" disabled>Copy</button>
@@ -162,96 +131,107 @@
       const $btnProcess = document.getElementById('btnProcess');
       const $btnCopy = document.getElementById('btnCopy');
       const $btnClear = document.getElementById('btnClear');
-
       const $inCount = document.getElementById('inCount');
       const $outCount = document.getElementById('outCount');
       const $removedCount = document.getElementById('removedCount');
       const $toast = document.getElementById('toast');
 
-      const showToast = (msg) => {
+      const toast = (msg) => {
         $toast.textContent = msg;
         $toast.classList.add('show');
         clearTimeout($toast._t);
         $toast._t = setTimeout(() => $toast.classList.remove('show'), 1400);
       };
 
-      const linesNonBlank = (text) => {
+      // remove ONLY empty/space-only lines; trim edges
+      const nonBlankLines = (text) => {
         const lines = text.split(/\r\n|\n|\r/);
         const out = [];
         for (let line of lines){
-          if (line.trim().length === 0) continue; // remove empty / space-only lines
-          out.push(line.trim());                  // remove leading/trailing spaces only
+          if (line.trim().length === 0) continue;
+          out.push(line.trim());
         }
         return out;
       };
 
-      const extractBin6 = (line) => {
-        // first standalone 6 digits; else any 6 consecutive digits
-        let m = line.match(/\b(\d{6})\b/);
-        if (m) return m[1];
-        m = line.match(/(\d{6})/);
+      // STRICT extraction:
+      // Accept only patterns that look like:
+      // 1) 6+ digits/x at start (optionally followed by |..|.. etc)
+      // 2) OR any 6-digit BIN found anywhere in the line (like emoji lines),
+      //    but output becomes ONLY "BINxxxxxxxxxx" (16 total)
+      //
+      // Additionally: if a line contains a pipe-format like "|MM|YYYY" or "|MM|YY" (or other pipe chunks),
+      // we keep that pipe tail, but only if it is attached to a BIN-ish token.
+      const extractStrict = (line) => {
+        // Case A: starts with digits/x token
+        let m = line.match(/^([0-9xX]{6,})(\|.*)?$/);
+        if (m){
+          const tokenRaw = m[1].replace(/X/g,'x');
+          const tail = m[2] || "";
+          const token = tokenRaw.length >= 16 ? tokenRaw.slice(0,16) : (tokenRaw + "x".repeat(16 - tokenRaw.length));
+          return token + tail;
+        }
+
+        // Case B: emoji/details line -> grab first standalone 6 digits near start
+        m = line.match(/^\s*[^\d\n]{1,12}\s+(\d{6})\b/);
+        if (!m) m = line.match(/\b(\d{6})\b/);
+        if (m){
+          return m[1] + "x".repeat(10); // 16 total
+        }
+
+        // otherwise: reject
+        return null;
+      };
+
+      const key6 = (normalizedOutLine) => {
+        const m = normalizedOutLine.match(/^(\d{6})/);
         return m ? m[1] : null;
       };
 
-      const padTo16 = (line) => {
-        // If starts with digits/x token -> pad that token
-        const start = line.match(/^([0-9xX]+)/);
-        if (start){
-          const token = start[1].replace(/X/g,'x');
-          const rest = line.slice(start[1].length);
-          return token.length >= 16 ? (token + rest) : (token + 'x'.repeat(16 - token.length) + rest);
-        }
-        // Else pad the extracted 6-digit in-place (6 + 10x)
-        const bin = extractBin6(line);
-        if (!bin) return line;
-        const idx = line.indexOf(bin);
-        if (idx < 0) return line;
-        return line.slice(0, idx) + (bin + 'x'.repeat(10)) + line.slice(idx + 6);
-      };
-
       const updateInCount = () => {
-        $inCount.textContent = String(linesNonBlank($in.value).length);
+        $inCount.textContent = String(nonBlankLines($in.value).length);
       };
 
       const process = () => {
-        const lines = linesNonBlank($in.value);
+        const lines = nonBlankLines($in.value);
+
         const seen = new Set();
-        const out = [];
+        const outLines = [];
         let removed = 0;
 
         for (const line of lines){
-          const bin = extractBin6(line);
-          if (!bin){
-            out.push(line);
-            continue;
-          }
-          if (seen.has(bin)){
+          const normalized = extractStrict(line);
+          if (!normalized) continue; // STRICT: drop anything else
+          const k = key6(normalized);
+          if (!k) continue;
+
+          if (seen.has(k)){
             removed++;
             continue;
           }
-          seen.add(bin);
-          out.push(padTo16(line));
+          seen.add(k);
+          outLines.push(normalized);
         }
 
-        $out.value = out.join("\n");
-        $outCount.textContent = String(out.length);
+        $out.value = outLines.join("\n");
+        $outCount.textContent = String(outLines.length);
         $removedCount.textContent = String(removed);
-        $btnCopy.disabled = out.length === 0;
+        $btnCopy.disabled = outLines.length === 0;
 
-        showToast(removed ? `Removed ${removed}` : "Done");
+        toast("Done");
       };
 
       const copy = async () => {
         const txt = $out.value;
-        if (!txt.trim()) return showToast("Empty");
+        if (!txt.trim()) return toast("Empty");
         try{
           await navigator.clipboard.writeText(txt);
-          showToast("Copied");
+          toast("Copied");
         }catch{
           $out.focus();
           $out.select();
           document.execCommand('copy');
-          showToast("Copied");
+          toast("Copied");
         }
       };
 
@@ -263,7 +243,7 @@
         $removedCount.textContent = "0";
         $btnCopy.disabled = true;
         $in.focus();
-        showToast("Cleared");
+        toast("Cleared");
       };
 
       $btnProcess.addEventListener('click', process);
