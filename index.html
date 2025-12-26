@@ -6,42 +6,20 @@
   <title>DeDupe</title>
   <style>
     :root{
-      --bg:#0b1220;
-      --panel:#0f1a2e;
-      --border:rgba(255,255,255,.10);
-      --text:rgba(255,255,255,.92);
-      --muted:rgba(255,255,255,.62);
-      --accent:#2563eb;
-      --danger:#ef4444;
-      --shadow:0 14px 34px rgba(0,0,0,.38);
-      --r:14px;
+      --bg:#0b1220; --panel:#0f1a2e; --border:rgba(255,255,255,.10);
+      --text:rgba(255,255,255,.92); --muted:rgba(255,255,255,.62);
+      --accent:#2563eb; --danger:#ef4444; --shadow:0 14px 34px rgba(0,0,0,.38); --r:14px;
     }
     *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-      background:var(--bg);
-      color:var(--text);
-      padding:18px;
-    }
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text);padding:18px}
     .wrap{max-width:1120px;margin:0 auto}
-    .top{
-      display:flex;align-items:center;justify-content:space-between;
-      gap:12px;flex-wrap:wrap;margin-bottom:12px;
-    }
-    .title{font-weight:800;letter-spacing:.2px;font-size:15px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    .title{font-weight:900;letter-spacing:.2px;font-size:15px}
     .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
     button{
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.06);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:12px;
-      font-weight:750;
-      font-size:13px;
-      cursor:pointer;
-      transition:background .12s ease, border-color .12s ease, transform .08s ease, opacity .12s ease;
-      user-select:none;
+      border:1px solid var(--border);background:rgba(255,255,255,.06);color:var(--text);
+      padding:10px 12px;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer;
+      transition:background .12s ease,border-color .12s ease,transform .08s ease,opacity .12s ease;user-select:none
     }
     button:hover{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.16)}
     button:active{transform:translateY(1px)}
@@ -53,41 +31,23 @@
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media(max-width:920px){.grid{grid-template-columns:1fr}}
     .panel{
-      background:var(--panel);
-      border:1px solid var(--border);
-      border-radius:var(--r);
-      box-shadow:var(--shadow);
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-      min-height:560px;
+      background:var(--panel);border:1px solid var(--border);border-radius:var(--r);
+      box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;min-height:560px
     }
-    .head{
-      padding:12px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-    }
-    .head .label{font-weight:800;font-size:13px;letter-spacing:.2px}
+    .head{padding:12px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .head .label{font-weight:900;font-size:13px;letter-spacing:.2px}
     .head .meta{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
     textarea{
-      flex:1;width:100%;
-      border:0;outline:none;resize:none;
-      padding:12px;background:transparent;color:var(--text);
+      flex:1;width:100%;border:0;outline:none;resize:none;padding:12px;background:transparent;color:var(--text);
       font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-      font-size:13px;line-height:1.38;
-      font-variant-numeric:tabular-nums;
-      white-space:pre;overflow:auto;
+      font-size:13px;line-height:1.38;font-variant-numeric:tabular-nums;white-space:pre;overflow:auto
     }
     textarea::placeholder{color:rgba(255,255,255,.33)}
     .toast{
       position:fixed;left:50%;bottom:16px;transform:translateX(-50%);
-      background:rgba(0,0,0,.55);
-      border:1px solid rgba(255,255,255,.14);
-      color:rgba(255,255,255,.92);
-      padding:10px 12px;border-radius:12px;font-size:12px;
-      display:none;max-width:min(92vw, 520px);
-      backdrop-filter: blur(10px);
-      box-shadow:0 10px 28px rgba(0,0,0,.35);
+      background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.92);
+      padding:10px 12px;border-radius:12px;font-size:12px;display:none;max-width:min(92vw,520px);
+      backdrop-filter: blur(10px);box-shadow:0 10px 28px rgba(0,0,0,.35)
     }
     .toast.show{display:block}
   </style>
@@ -140,51 +100,53 @@
         $toast.textContent = msg;
         $toast.classList.add('show');
         clearTimeout($toast._t);
-        $toast._t = setTimeout(() => $toast.classList.remove('show'), 1400);
+        $toast._t = setTimeout(() => $toast.classList.remove('show'), 1200);
       };
 
-      // remove ONLY empty/space-only lines; trim edges
       const nonBlankLines = (text) => {
         const lines = text.split(/\r\n|\n|\r/);
         const out = [];
         for (let line of lines){
-          if (line.trim().length === 0) continue;
+          if (line.trim().length === 0) continue; // remove empty/space-only lines
           out.push(line.trim());
         }
         return out;
       };
 
-      // STRICT extraction:
-      // Accept only patterns that look like:
-      // 1) 6+ digits/x at start (optionally followed by |..|.. etc)
-      // 2) OR any 6-digit BIN found anywhere in the line (like emoji lines),
-      //    but output becomes ONLY "BINxxxxxxxxxx" (16 total)
+      // STRICT: output only these forms:
+      // 1) <digits/x at least 6 chars...> optionally followed by |...|...
+      // 2) or if the line is a quoted entry like: "625814260257xxxx|05|2028",
+      //    extract inside quotes and treat as (1).
+      // 3) or emoji/details line: extract first 6 digits -> output BINxxxxxxxxxx
       //
-      // Additionally: if a line contains a pipe-format like "|MM|YYYY" or "|MM|YY" (or other pipe chunks),
-      // we keep that pipe tail, but only if it is attached to a BIN-ish token.
+      // Anything else is dropped.
       const extractStrict = (line) => {
-        // Case A: starts with digits/x token
-        let m = line.match(/^([0-9xX]{6,})(\|.*)?$/);
+        // quoted: ".....",
+        let m = line.match(/"([^"]+)"/);
+        if (m) line = m[1].trim();
+
+        // starts with bin-ish token (digits/x) + optional pipe tail
+        m = line.match(/^([0-9xX]{6,})(\|[0-9xX|]+)?$/);
         if (m){
           const tokenRaw = m[1].replace(/X/g,'x');
           const tail = m[2] || "";
-          const token = tokenRaw.length >= 16 ? tokenRaw.slice(0,16) : (tokenRaw + "x".repeat(16 - tokenRaw.length));
+
+          // pad token to 16 with x (do not cut if longer than 16; keep as-is)
+          const token = tokenRaw.length >= 16 ? tokenRaw : (tokenRaw + "x".repeat(16 - tokenRaw.length));
           return token + tail;
         }
 
-        // Case B: emoji/details line -> grab first standalone 6 digits near start
-        m = line.match(/^\s*[^\d\n]{1,12}\s+(\d{6})\b/);
-        if (!m) m = line.match(/\b(\d{6})\b/);
+        // emoji/details line -> take first standalone 6 digits
+        m = line.match(/\b(\d{6})\b/);
         if (m){
-          return m[1] + "x".repeat(10); // 16 total
+          return m[1] + "x".repeat(10);
         }
 
-        // otherwise: reject
         return null;
       };
 
-      const key6 = (normalizedOutLine) => {
-        const m = normalizedOutLine.match(/^(\d{6})/);
+      const key6 = (outLine) => {
+        const m = outLine.match(/^(\d{6})/);
         return m ? m[1] : null;
       };
 
@@ -194,14 +156,14 @@
 
       const process = () => {
         const lines = nonBlankLines($in.value);
-
         const seen = new Set();
         const outLines = [];
         let removed = 0;
 
         for (const line of lines){
           const normalized = extractStrict(line);
-          if (!normalized) continue; // STRICT: drop anything else
+          if (!normalized) continue;
+
           const k = key6(normalized);
           if (!k) continue;
 
