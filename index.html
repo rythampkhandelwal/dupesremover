@@ -3,17 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>BIN De-Duper</title>
+  <title>DeDupe (6-digit)</title>
   <style>
     :root{
       --bg:#0b1220;
       --panel:#0f1a2e;
       --border:rgba(255,255,255,.10);
       --text:rgba(255,255,255,.92);
-      --muted:rgba(255,255,255,.60);
+      --muted:rgba(255,255,255,.62);
       --accent:#2563eb;
       --danger:#ef4444;
-      --shadow:0 12px 30px rgba(0,0,0,.35);
+      --shadow:0 14px 34px rgba(0,0,0,.38);
       --r:14px;
     }
     *{box-sizing:border-box}
@@ -24,40 +24,29 @@
       color:var(--text);
       padding:18px;
     }
-    .wrap{max-width:1100px;margin:0 auto}
+    .wrap{max-width:1120px;margin:0 auto}
     .top{
-      display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
-      margin-bottom:12px;
+      display:flex;align-items:center;justify-content:space-between;
+      gap:12px;flex-wrap:wrap;margin-bottom:12px;
     }
-    .brand{
-      display:flex;flex-direction:column;gap:3px;
+    .title{
+      font-weight:750;letter-spacing:.2px;
+      font-size:15px;line-height:1.1;
     }
-    .brand .h{
-      font-weight:700;
-      letter-spacing:.2px;
-      font-size:16px;
-    }
-    .brand .s{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.3;
-    }
-    .bar{
-      display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center;
-    }
+    .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
     button{
       border:1px solid var(--border);
       background:rgba(255,255,255,.06);
       color:var(--text);
       padding:10px 12px;
       border-radius:12px;
-      font-weight:650;
+      font-weight:700;
       font-size:13px;
       cursor:pointer;
-      transition:.12s ease;
+      transition:background .12s ease, border-color .12s ease, transform .08s ease, opacity .12s ease;
       user-select:none;
     }
-    button:hover{background:rgba(255,255,255,.10)}
+    button:hover{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.16)}
     button:active{transform:translateY(1px)}
     button:disabled{opacity:.55;cursor:not-allowed}
     .primary{
@@ -75,7 +64,7 @@
       grid-template-columns:1fr 1fr;
       gap:12px;
     }
-    @media(max-width:900px){.grid{grid-template-columns:1fr}}
+    @media(max-width:920px){.grid{grid-template-columns:1fr}}
     .panel{
       background:var(--panel);
       border:1px solid var(--border);
@@ -84,22 +73,15 @@
       overflow:hidden;
       display:flex;
       flex-direction:column;
-      min-height:520px;
+      min-height:560px;
     }
-    .panelHead{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:12px 12px 10px 12px;
+    .head{
+      padding:12px;
       border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
     }
-    .panelHead .t{
-      font-weight:700;
-      font-size:13px;
-      letter-spacing:.2px;
-    }
-    .panelHead .meta{
+    .head .label{font-weight:750;font-size:13px;letter-spacing:.2px}
+    .head .meta{
       color:var(--muted);
       font-size:12px;
       font-variant-numeric:tabular-nums;
@@ -116,26 +98,16 @@
       color:var(--text);
       font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
       font-size:13px;
-      line-height:1.35;
+      line-height:1.38;
       font-variant-numeric:tabular-nums;
-      white-space:pre;      /* preserve exact newlines */
+      white-space:pre;
       overflow:auto;
     }
-    textarea::placeholder{color:rgba(255,255,255,.35)}
-    .foot{
-      padding:10px 12px;
-      border-top:1px solid rgba(255,255,255,.08);
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:space-between;
-      flex-wrap:wrap;
-    }
-    .hint{color:var(--muted);font-size:12px}
+    textarea::placeholder{color:rgba(255,255,255,.33)}
     .toast{
       position:fixed;
       left:50%;
-      bottom:18px;
+      bottom:16px;
       transform:translateX(-50%);
       background:rgba(0,0,0,.55);
       border:1px solid rgba(255,255,255,.14);
@@ -146,6 +118,7 @@
       display:none;
       max-width:min(92vw, 520px);
       backdrop-filter: blur(10px);
+      box-shadow:0 10px 28px rgba(0,0,0,.35);
     }
     .toast.show{display:block}
   </style>
@@ -153,42 +126,29 @@
 <body>
   <div class="wrap">
     <div class="top">
-      <div class="brand">
-        <div class="h">BIN De-Duper</div>
-        <div class="s">Dedupes by first 6 digits. Pads the starting token to 16 chars with “x”.</div>
-      </div>
-      <div class="bar">
-        <button class="primary" id="btnProcess">Process</button>
-        <button id="btnCopy" disabled>Copy Output</button>
-        <button class="danger" id="btnClear">Clear</button>
+      <div class="title">DeDupe (6-digit)</div>
+      <div class="actions">
+        <button id="btnProcess" class="primary" type="button">Process</button>
+        <button id="btnCopy" type="button" disabled>Copy</button>
+        <button id="btnClear" class="danger" type="button">Clear</button>
       </div>
     </div>
 
     <div class="grid">
       <div class="panel">
-        <div class="panelHead">
-          <div class="t">Input</div>
-          <div class="meta"><span id="inLines">0</span> lines</div>
+        <div class="head">
+          <div class="label">Input</div>
+          <div class="meta"><span id="inCount">0</span></div>
         </div>
-        <textarea id="in" placeholder="Paste your lines here..."></textarea>
-        <div class="foot">
-          <div class="hint">Tip: Ctrl+Enter to process</div>
-          <div class="hint">Blank/space-only lines are removed</div>
-        </div>
+        <textarea id="in" spellcheck="false" placeholder="Paste..."></textarea>
       </div>
 
       <div class="panel">
-        <div class="panelHead">
-          <div class="t">Output</div>
-          <div class="meta">
-            kept <span id="kept">0</span> • removed <span id="removed">0</span>
-          </div>
+        <div class="head">
+          <div class="label">Output</div>
+          <div class="meta"><span id="outCount">0</span> • <span id="removedCount">0</span></div>
         </div>
-        <textarea id="out" readonly placeholder="Output appears here..."></textarea>
-        <div class="foot">
-          <div class="hint">Only leading/trailing spaces are cleaned</div>
-          <div class="hint">Newlines preserved</div>
-        </div>
+        <textarea id="out" spellcheck="false" readonly placeholder="Result..."></textarea>
       </div>
     </div>
   </div>
@@ -196,131 +156,128 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    (function(){
+    (() => {
       const $in = document.getElementById('in');
       const $out = document.getElementById('out');
       const $btnProcess = document.getElementById('btnProcess');
       const $btnCopy = document.getElementById('btnCopy');
       const $btnClear = document.getElementById('btnClear');
 
-      const $inLines = document.getElementById('inLines');
-      const $kept = document.getElementById('kept');
-      const $removed = document.getElementById('removed');
+      const $inCount = document.getElementById('inCount');
+      const $outCount = document.getElementById('outCount');
+      const $removedCount = document.getElementById('removedCount');
       const $toast = document.getElementById('toast');
 
-      function toast(msg){
+      const showToast = (msg) => {
         $toast.textContent = msg;
         $toast.classList.add('show');
         clearTimeout($toast._t);
-        $toast._t = setTimeout(()=> $toast.classList.remove('show'), 1800);
-      }
+        $toast._t = setTimeout(() => $toast.classList.remove('show'), 1400);
+      };
 
-      // Keep user's line breaks exactly (no "pretty rewrap").
-      // Remove only lines that are empty or contain only spaces/tabs.
-      function splitKeepNonBlankLines(text){
+      const linesNonBlank = (text) => {
         const lines = text.split(/\r\n|\n|\r/);
         const out = [];
-        for(const line of lines){
-          if (line.trim().length === 0) continue;       // remove empty/space-only lines (your requirement)
-          out.push(line.trim());                        // remove leading/trailing spaces ONLY
+        for (let line of lines){
+          if (line.trim().length === 0) continue; // remove empty / space-only lines
+          out.push(line.trim());                  // remove leading/trailing spaces only
         }
         return out;
-      }
+      };
 
-      // De-dupe key: first 6 digits at the START of the line.
-      function key6(line){
-        const m = line.match(/^(\d{6})/);
+      const extractBin6 = (line) => {
+        // first standalone 6 digits; else any 6 consecutive digits
+        let m = line.match(/\b(\d{6})\b/);
+        if (m) return m[1];
+        m = line.match(/(\d{6})/);
         return m ? m[1] : null;
-      }
+      };
 
-      // Pad ONLY the starting token made from digits/x to 16 chars using 'x'.
-      // Does NOT touch anything after (pipes, dates, etc).
-      function padStartToken16(line){
-        const m = line.match(/^([0-9xX]+)/);
-        if(!m) return line;
+      const padTo16 = (line) => {
+        // If starts with digits/x token -> pad that token
+        const start = line.match(/^([0-9xX]+)/);
+        if (start){
+          const token = start[1].replace(/X/g,'x');
+          const rest = line.slice(start[1].length);
+          return token.length >= 16 ? (token + rest) : (token + 'x'.repeat(16 - token.length) + rest);
+        }
+        // Else pad the extracted 6-digit in-place (6 + 10x)
+        const bin = extractBin6(line);
+        if (!bin) return line;
+        const idx = line.indexOf(bin);
+        if (idx < 0) return line;
+        return line.slice(0, idx) + (bin + 'x'.repeat(10)) + line.slice(idx + 6);
+      };
 
-        const token = m[1].replace(/X/g,'x');
-        const rest = line.slice(m[1].length);
+      const updateInCount = () => {
+        $inCount.textContent = String(linesNonBlank($in.value).length);
+      };
 
-        if(token.length >= 16) return token + rest;
-        return token + 'x'.repeat(16 - token.length) + rest;
-      }
-
-      function updateCounts(){
-        $inLines.textContent = String(splitKeepNonBlankLines($in.value).length);
-      }
-
-      function process(){
-        const lines = splitKeepNonBlankLines($in.value);
-
+      const process = () => {
+        const lines = linesNonBlank($in.value);
         const seen = new Set();
-        const kept = [];
+        const out = [];
         let removed = 0;
 
-        for(const line0 of lines){
-          const line = line0; // already trimmed
-          const k = key6(line);
-
-          // If line doesn't start with 6 digits, we still keep it (but we still do padding if it begins with digits/x)
-          if(!k){
-            kept.push(padStartToken16(line));
+        for (const line of lines){
+          const bin = extractBin6(line);
+          if (!bin){
+            out.push(line);
             continue;
           }
-
-          if(seen.has(k)){
+          if (seen.has(bin)){
             removed++;
             continue;
           }
-
-          seen.add(k);
-          kept.push(padStartToken16(line));
+          seen.add(bin);
+          out.push(padTo16(line));
         }
 
-        $out.value = kept.join("\n"); // exactly one line per input line, same format you pasted
-        $kept.textContent = String(kept.length);
-        $removed.textContent = String(removed);
-        $btnCopy.disabled = kept.length === 0;
+        $out.value = out.join("\n");
+        $outCount.textContent = String(out.length);
+        $removedCount.textContent = String(removed);
+        $btnCopy.disabled = out.length === 0;
 
-        toast(removed ? `Done: removed ${removed} duplicate(s).` : "Done: no duplicates found.");
-      }
+        showToast(removed ? `Removed ${removed}` : "Done");
+      };
 
-      async function copyOut(){
+      const copy = async () => {
         const txt = $out.value;
-        if(!txt.trim()){ toast("Output is empty."); return; }
+        if (!txt.trim()) return showToast("Empty");
         try{
           await navigator.clipboard.writeText(txt);
-          toast("Copied.");
+          showToast("Copied");
         }catch{
           $out.focus();
           $out.select();
           document.execCommand('copy');
-          toast("Copied.");
+          showToast("Copied");
         }
-      }
+      };
 
-      function clearAll(){
+      const clearAll = () => {
         $in.value = "";
         $out.value = "";
-        $kept.textContent = "0";
-        $removed.textContent = "0";
+        $inCount.textContent = "0";
+        $outCount.textContent = "0";
+        $removedCount.textContent = "0";
         $btnCopy.disabled = true;
-        updateCounts();
-        toast("Cleared.");
         $in.focus();
-      }
+        showToast("Cleared");
+      };
 
       $btnProcess.addEventListener('click', process);
-      $btnCopy.addEventListener('click', copyOut);
+      $btnCopy.addEventListener('click', copy);
       $btnClear.addEventListener('click', clearAll);
-      $in.addEventListener('input', updateCounts);
+      $in.addEventListener('input', updateInCount);
 
-      document.addEventListener('keydown', (e)=>{
+      document.addEventListener('keydown', (e) => {
         const isMac = /MAC/i.test(navigator.platform);
         const mod = isMac ? e.metaKey : e.ctrlKey;
-        if(mod && e.key === 'Enter'){ e.preventDefault(); process(); }
+        if (mod && e.key === 'Enter'){ e.preventDefault(); process(); }
       });
 
-      updateCounts();
+      updateInCount();
     })();
   </script>
 </body>
